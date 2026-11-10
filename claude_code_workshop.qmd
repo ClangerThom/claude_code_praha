@@ -1,0 +1,440 @@
+---
+# Workshop deck, built from claude_code_workshop_outline.md.
+# Placeholders in *[...]* are still to be filled (screenshots, target table).
+title: "Agentná AI v praxi sociálnej vedy"
+author: "Thomas Philip Heyes"
+institute: "Katedra sociologie, Fakulta sociálních studií, Masarykova univerzita"
+lang: sk
+format:
+  beamer:
+    aspectratio: 169
+    fontsize: 11pt
+    keep-tex: true
+    latex-clean: false  # keep the .log for the zero-tolerance checks
+    slide-level: 2      # `#` = section (auto dark divider), `##` = slide
+    highlight-style: kate
+    include-in-header:
+      - C:/Users/Admin/Documents/github_projects/thomas-tools/themes/personal/personal-theme.tex
+      - text: |
+          % Shared TikZ styles for the deck's diagrams.
+          \usetikzlibrary{arrows.meta}
+          \tikzset{
+            folder/.style={draw=Accent, line width=0.8pt, rounded corners=3pt, fill=Sand,
+                           text=Ink, anchor=west, inner xsep=9pt, inner ysep=5pt,
+                           text width=5.0cm, align=left, font=\normalsize},
+            root/.style={rounded corners=3pt, fill=Midnight, text=Cream, anchor=east,
+                         inner xsep=12pt, inner ysep=9pt, font=\large\bfseries},
+            link/.style={draw=Muted, line width=0.8pt},
+            stepbox/.style={draw=Accent, line width=0.8pt, rounded corners=3pt, fill=Sand,
+                         text=Ink, inner xsep=10pt, inner ysep=7pt, align=center,
+                         minimum width=2.6cm, font=\normalsize\bfseries},
+            flow/.style={draw=Muted, line width=1pt, -{Latex[length=2.4mm]}}
+          }
+execute:
+  echo: false
+  warning: false
+  message: false
+fig-width: 8
+fig-height: 4.2
+fig-format: pdf
+---
+
+## LLM sú v kvantitatívnej sociálnej vede už bežným nástrojom
+
+- Písanie a ladenie kódu v R
+- Vysvetľovanie metód a výstupov modelov
+- Úprava a preklad textov
+- Kódovanie a klasifikácia textových dát
+
+Väčšinou cez chatové okno.
+
+## Chatbot vidí len to, čo doň vložíte
+
+- Typický postup: napíšete skript → nastane chyba → vložíte chybu do chatu → riešite problém
+- Funguje to, ale má to strop:
+  - 3 000-riadkový skript do chatovacieho okna nedostanete
+  - AI nevie, čo znamenajú názvy vašich premenných
+  - Nevie, čo ste skúšali minulý týždeň
+
+---
+
+\keybox{\textbf{Ukážka:} skutočná konverzácia s chatbotom o chybe v kóde}
+
+## Agent pracuje priamo vo vašom priečinku
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[root, anchor=center] (c) at (0,0) {váš priečinok/};
+  \node[stepbox] (a) at (0,2.1)   {číta};
+  \node[stepbox] (b) at (4.6,0)   {píše};
+  \node[stepbox] (d) at (0,-2.1)  {spúšťa};
+  \node[stepbox] (e) at (-4.6,0)  {kontroluje};
+  \draw[flow] (a.east) to[bend left=22] (b.north);
+  \draw[flow] (b.south) to[bend left=22] (d.east);
+  \draw[flow] (d.west) to[bend left=22] (e.south);
+  \draw[flow] (e.north) to[bend left=22] (a.west);
+\end{tikzpicture}
+\end{center}
+```
+
+## Dnes: jedna dátová sada, dve úlohy, jeden vlastný nástroj
+
+1. **Prostredie:** priečinok, Positron, `CLAUDE.md`, git
+2. **Úloha 1 — replikácia:** publikované grafy z dát GSS
+3. **Úloha 2 — explorácia:** dôvera v dátach GSS
+4. **Vlastné nástroje:** ako z opakovaného postupu spraviť nástroj
+
+# Prostredie
+
+## Každý výskum možno previesť na štruktúru súborov
+
+- Literatúra, poznámky z literatúry, analytické skripty, rozpracované texty, prezentácie sú väčšinou roztrúsené po vašom PC alebo zápisníkoch
+- Všetky však patria k jednému intelektuálnemu projektu: **vašej výskumnej otázke**
+- Predstavte si ich ako jeden celok
+
+---
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[root] (root) at (0,0) {výskumná otázka/};
+  \foreach \name/\y [count=\i] in {literatúra/2.4, poznámky z literatúry/1.2,
+                                   analýza/0, manuskript/-1.2, prezentácie/-2.4} {
+    \node[folder] (f\i) at (2.4,\y) {\name/};
+    \draw[link] (root.east) -- ++(1.2,0) |- (f\i.west);
+  }
+\end{tikzpicture}
+\end{center}
+```
+
+## Projekt je priečinok s pevnou štruktúrou
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[root] (root) at (0,0) {claude\_code\_praha/};
+  \foreach \name/\note/\y [count=\i] in {
+      CLAUDE.md/zadanie pre agenta/2.5,
+      replication\_paper\slash/článok/1.5,
+      data\slash/GSS/0.5,
+      skripty\slash/R kód/-0.5,
+      vystupy\slash/reporty{,} grafy/-1.5,
+      zaznamy\slash/poznámky zo sedení/-2.5} {
+    \node[folder, text width=3.5cm] (f\i) at (1.5,\y) {\name};
+    \node[anchor=west, text=Muted, font=\small] at (5.7,\y) {\note};
+    \draw[link] (root.east) -- ++(0.75,0) |- (f\i.west);
+  }
+\end{tikzpicture}
+\end{center}
+```
+
+## Editor a agent pracujú nad tými istými súbormi
+
+1. Otvorte projekt v IDE (Positron, RStudio, VS Code)
+2. Otvorte panel terminálu
+3. Spustite agenta: napíšte `claude`
+
+Osobne odporúčam Positron: nasledovník RStudia, natívne podporuje R aj Python.
+
+---
+
+```{=latex}
+\begin{center}
+\includegraphics[width=\textwidth,height=0.97\textheight,keepaspectratio]{images/positron_claude_code.png}
+\end{center}
+```
+
+## CLAUDE.md je trvalé zadanie pre agenta
+
+- Agent nemá **trvalú pamäť** medzi sedeniami
+- `CLAUDE.md` sa **automaticky načíta** na začiatku každého sedenia
+- Čo doň patrí:
+  - Logika štruktúry projektu
+  - Kľúčové názvy premenných a ich význam
+  - Opakujúce sa problémy a ich riešenia
+- **Stručnosť nadovšetko**
+
+---
+
+\scriptsize
+
+```markdown
+# CLAUDE.md
+
+## Project
+
+R/Quarto analysis of a survey experiment measuring normative prerequisites
+of parenthood in the Czech Republic. Respondents rated parental readiness
+of couples whose traits were varied randomly across 6 components (vignette
+gender, partnership status, housing, daycare availability, employment
+stability, income).
+
+...
+
+## Git
+
+...
+
+## File structure
+
+...
+
+## Key design decisions
+
+...
+```
+
+## Git je tlačidlo „späť“: commit pred, diff po
+
+:::: {.columns}
+
+::: {.column width="47%"}
+\highlight{Pred úlohou}
+
+`git commit`
+
+Uložíte stav, ku ktorému sa dá vrátiť.
+:::
+
+::: {.column width="47%"}
+\highlight{Po úlohe}
+
+`git diff`
+
+Vidíte presne, čo agent zmenil.
+:::
+
+::::
+
+\keybox{Používajte git, aj keď pracujete sami: \texttt{git diff} je váš prehľad o všetkom, čo agent zmenil.}
+
+## Dáta pod zmluvou agentovi nepatria
+
+- Všetko, čo agent prečíta, odchádza na servery poskytovateľa modelu
+- Verejné dáta (GSS): bez problému
+- Dáta so zmluvou o použití alebo s osobnými údajmi: najprv overte zmluvu a pravidlá inštitúcie
+
+---
+
+\keybox{\textbf{Živá ukážka:} otvoríme repozitár v Positrone a požiadame agenta, aby prečítal priečinok a vysvetlil, čo v ňom je}
+
+# Úloha 1: replikácia
+
+## Replikujeme grafy, ktorých výsledok poznáme
+
+- Mondak a Sanders (2003): *Tolerance and Intolerance, 1976–1998*, American Journal of Political Science
+- Dáta: General Social Survey, v R cez balík `gssr`
+
+- Cieľ: grafy 1, 2 a 5 z článku — najprv v pôvodnom období, potom s novšími dátami
+
+## Agent dostane len článok a dáta — oboje ako čistý text
+
+- Agent funguje najlepšie s **plochým, čitateľným textom**
+- PDF, office formáty a obrázky sú náročné na tokeny
+- **Riešenie: predspracovanie** — článok raz skonvertujeme do Markdownu
+  - Nástroje: `markitdown`, `pymupdf4llm`, `pandoc`
+- Všeobecne: nechajte agenta **vybudovať nástroj**, nie trápiť sa s formátom
+
+## Codebook v čistom texte umožní hľadať podľa významu
+
+- Názvy ako `abany` či `polviews` agentovi nepovedia, čo premenná meria
+- `gssrdoc::gss_doc`: jeden riadok na každú z 6 942 premenných GSS — znenie otázky, kódy odpovedí, roky zberu
+- „Nájdi všetky premenné o potratoch“ → 37 premenných, bez listovania
+- Veľmi užitočné pri **harmonizácii prieskumov** a **spájaní vĺn** (príklad: GGS)
+
+\keybox{Ak vaše dáta taký codebook nemajú, agent ho vie raz vybudovať.}
+
+## Najprv plán, potom realizácia
+
+- Tokeny sú **menou** vašej práce
+- Drahé: rozsiahly kontext, vysoký „effort“, prémiové modely
+- Lacnejšie: ľahšie modely, zamerané úlohy, stručný kontext
+
+1. Plán rozpracujte s vrcholovým modelom v jednoduchom Markdown súbore
+2. Až hotový plán dajte agentovi realizovať — často stačí lacnejší model
+
+## Celé zadanie pre replikáciu
+
+> I want you to build out a qmd replication script for figures 1, 2, and 5 from the article in the repo using data from the package gssr. Use gssrdoc to find the important variables. I want the output to be react.js html. Include version with original span of data and then add slides with extensions with newer data
+
+## S agentom hovorte po anglicky, kedykoľvek sa dá
+
+- Kód, dokumentácia, názvy premenných aj chybové hlášky sú po anglicky
+- Zadanie v tom istom jazyku necháva menej priestoru na nedorozumenie
+
+---
+
+\keybox{\textbf{Živá ukážka:} plán → skript → grafy → porovnanie s článkom}
+
+## Zhoda čísla nie je dôkaz, že analýza je správna
+
+- Agent si vie **vymyslieť** názov premennej
+- Vie **potichu zmeniť** vzorku alebo špecifikáciu
+- Vie **ladiť analýzu**, kým číslo „sedí“
+
+\keybox{Zadanie: rozdiely oproti článku nahlás, neodstraňuj ich.}
+
+# Úloha 2: explorácia
+
+## Bez známej odpovede musíte výstup vidieť
+
+- Otázka: ako sa v dátach GSS vyvíjala dôvera v ľudí a v inštitúcie?
+- Nemáme publikovaný výsledok, s ktorým by sme ten náš porovnali
+- Kontrolu preto robíme očami: grafy, tabuľky, veľkosti vzoriek
+
+## Celé zadanie pre exploráciu
+
+*[Prompt pre exploráciu — doplniť po vyskúšaní úlohy]*
+
+## Čistý text dnu, HTML von
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[stepbox, text width=3.0cm, font=\normalsize] (in) at (-4.8,0)
+    {\textbf{Čistý text}\\[2pt]{\small .md, .csv, .R}};
+  \node[root, anchor=center] (ag) at (0,0) {agent};
+  \node[stepbox, text width=3.0cm, font=\normalsize] (out) at (4.8,0)
+    {\textbf{HTML report}\\[2pt]{\small grafy, tabuľky, text}};
+  \draw[flow] (in.east) -- (ag.west);
+  \draw[flow] (ag.east) -- (out.west);
+  \node[text=Muted, font=\small] at (-4.8,-1.25) {číta agent};
+  \node[text=Muted, font=\small] at (4.8,-1.25) {čítate vy};
+\end{tikzpicture}
+\end{center}
+```
+
+---
+
+\keybox{\textbf{Živá ukážka:} agent postaví HTML \mbox{report} o dôvere a spoločne ho prečítame}
+
+## Produkt je skript, nie chat
+
+- Všetko, čo agent urobil, musí skončiť v skripte
+- Skript musí zbehnúť **od začiatku do konca** v čistom R sedení
+- Čo existuje len v konverzácii, to sa nedá zopakovať
+
+## Záznam sedenia zorientuje ďalšie sedenie za pár minút
+
+Krátka textová poznámka na konci každého sedenia:
+
+- Čo ste robili
+- Čo ste zistili
+- Čo nasleduje a aké otázky ostali otvorené
+
+## Vlastné diagnostické grafy a vzhľad reportu patria do skillu
+
+- **Skill:** textový súbor s inštrukciami, ktorý agent načíta, keď ho úloha potrebuje
+- Ktoré diagnostické grafy chcete vidieť vždy: rozdelenia, chýbajúce hodnoty, veľkosti vzoriek
+- Ako má report vyzerať: farby, písmo, popisky, poradie sekcií
+- Agent to potom dodrží v každom HTML reporte
+
+## Sila nástroja je v prispôsobení vášmu vkusu
+
+- Skill je zápis **vašich** preferencií, nie univerzálny návod
+- Čo vyhovuje mne, vám vyhovovať nemusí
+
+\keybox{Môj recept nepreberajte. Postavte si vlastný.}
+
+# Vlastné nástroje
+
+## Čo robíte tretíkrát, z toho spravte nástroj
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[stepbox, text width=3.0cm, font=\normalsize] (a) at (-4.8,0) {opakovaný postup};
+  \node[stepbox, text width=3.0cm, font=\normalsize] (b) at (0,0) {zapísané inštrukcie};
+  \node[stepbox, text width=3.0cm, font=\normalsize] (c) at (4.8,0) {rovnaký výsledok zakaždým};
+  \draw[flow] (a.east) -- (b.west);
+  \draw[flow] (b.east) -- (c.west);
+\end{tikzpicture}
+\end{center}
+```
+
+## Nástroj = inštrukcie + šablóny + kontroly
+
+::::: {.columns align=top-baseline}
+
+::: {.column width="31%"}
+\highlight{Inštrukcie}
+
+`SKILL.md`: kroky a pravidlá, ktoré agent dodrží
+:::
+
+::: {.column width="31%"}
+\highlight{Šablóny}
+
+Témy pre Beamer a paleta pre grafy v R
+:::
+
+::: {.column width="31%"}
+\highlight{Kontroly}
+
+Render bez varovaní, potom kontrola každej strany PDF
+:::
+
+:::::
+
+---
+
+*[Screenshot: priečinok nástroja na prezentácie alebo jeho SKILL.md]*
+
+## Túto prezentáciu postavil ten istý nástroj
+
+- Jeden `.qmd` súbor: Quarto → Beamer → PDF
+- Rovnaká téma ako v mojich konferenčných prezentáciách
+- Nástroj som postavil raz; odvtedy ho len používam a opravujem
+
+---
+
+\keybox{\textbf{Živá ukážka:} z reportu o dôvere spravíme trojslajdovú prezentáciu}
+
+# Kde začať
+
+## Začnite na projekte, ktorý už máte
+
+1. Otvorte projekt, ktorý **už máte**
+2. Požiadajte agenta, aby prečítal hlavný skript a vysvetlil, čo robí
+3. **Zatiaľ ho nežiadajte o žiadne zmeny**
+4. Pozrite sa, ako dobre rozumie vašej práci
+
+## Kde pokračovať
+
+- **Materiály k workshopu** vrátane postupu inštalácie
+  - github.com/ClangerThom/claude_code_praha
+- **Substack Scotta Cunninghama:** Claude Code v empirickom výskume
+  - causalinf.substack.com
+- **Mixtape Harness** (Cunningham): šablóna pravidiel a kontrol pre kauzálnu inferenciu s agentmi
+  - github.com/scunning1975/mixtape_harness
+
+# Agent pracuje vo vašom priečinku. Musíte preňho vytvoriť správne prostredie a kontrolovať, čo z neho vyjde.
+
+## Kde ma nájdete
+
+:::: {.columns}
+
+::: {.column width="45%"}
+\highlight{Thomas Philip Heyes}
+
+Katedra sociologie\
+Fakulta sociálních studií\
+Masarykova univerzita\
+Joštova 10, Brno
+
+[thomas.philip.heyes@mail.muni.cz](mailto:thomas.philip.heyes@mail.muni.cz)
+:::
+
+::: {.column width="49%"}
+\highlight{Nájdete ma online}
+
+- ORCID: [0009-0001-3816-3425](https://orcid.org/0009-0001-3816-3425)
+- Web of Science: [KOC-6783-2024](https://www.webofscience.com/wos/author/rid/KOC-6783-2024)
+- Scopus: [59954219900](https://www.scopus.com/authid/detail.uri?authorId=59954219900)
+- Bluesky: [\@thomasphilipheyes.bsky.social](https://bsky.app/profile/thomasphilipheyes.bsky.social)
+- GitHub: [ClangerThom](https://github.com/ClangerThom)
+- LinkedIn: [thomas-philip-heyes](https://www.linkedin.com/in/thomas-philip-heyes-194079390/)
+:::
+
+::::

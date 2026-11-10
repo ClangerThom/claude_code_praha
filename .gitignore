@@ -1,0 +1,23 @@
+# The replication paper is not open access: the folder is tracked,
+# its contents are supplied by each participant.
+replication_paper/*
+!replication_paper/README.md
+
+# LaTeX / Quarto intermediates (regenerated on every render)
+*.aux
+*.log
+*.nav
+*.snm
+*.toc
+*.vrb
+claude_code_workshop.tex
+*_files/
+.quarto/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Planning outline: local only
+claude_code_workshop_outline.md
