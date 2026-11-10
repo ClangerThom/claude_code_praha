@@ -41,9 +41,9 @@ fig-format: pdf
 
 ## LLM sú v kvantitatívnej sociálnej vede už bežným nástrojom
 
-- Písanie a ladenie kódu v R
+- Písanie a ladenie analytického kódu
+- Literature reviews
 - Vysvetľovanie metód a výstupov modelov
-- Úprava a preklad textov
 - Kódovanie a klasifikácia textových dát
 
 Väčšinou cez chatové okno.
@@ -78,12 +78,13 @@ Väčšinou cez chatové okno.
 \end{center}
 ```
 
-## Dnes: jedna dátová sada, dve úlohy, jeden vlastný nástroj
+## Program
 
 1. **Prostredie:** priečinok, Positron, `CLAUDE.md`, git
-2. **Úloha 1 — replikácia:** publikované grafy z dát GSS
-3. **Úloha 2 — explorácia:** dôvera v dátach GSS
+2. **Úloha 1 replikácia:** publikované grafy z dát GSS
+3. **Úloha 2 explorácia:** dôvera vo verejné inštitúcie v dátach GSS
 4. **Vlastné nástroje:** ako z opakovaného postupu spraviť nástroj
+5. **Analýza a overovanie výstupov**
 
 # Prostredie
 
@@ -129,13 +130,11 @@ Väčšinou cez chatové okno.
 \end{center}
 ```
 
-## Editor a agent pracujú nad tými istými súbormi
+## Vývojové prostredie a agent pracujú s tými istými súbormi
 
 1. Otvorte projekt v IDE (Positron, RStudio, VS Code)
 2. Otvorte panel terminálu
 3. Spustite agenta: napíšte `claude`
-
-Osobne odporúčam Positron: nasledovník RStudia, natívne podporuje R aj Python.
 
 ---
 
@@ -148,12 +147,14 @@ Osobne odporúčam Positron: nasledovník RStudia, natívne podporuje R aj Pytho
 ## CLAUDE.md je trvalé zadanie pre agenta
 
 - Agent nemá **trvalú pamäť** medzi sedeniami
-- `CLAUDE.md` sa **automaticky načíta** na začiatku každého sedenia
+- `CLAUDE.md` sa **automaticky načíta** do každého promptu
 - Čo doň patrí:
   - Logika štruktúry projektu
   - Kľúčové názvy premenných a ich význam
   - Opakujúce sa problémy a ich riešenia
 - **Stručnosť nadovšetko**
+- ak je projekt veľmi zložitý, je lepšie rozparcelovať informácie o jednotlivých častiach do príslušných readme.md pod každým priečinkom
+- súčasné modely fungujú najlepšie bez nadmerného množstva pravidiel
 
 ---
 
@@ -185,7 +186,7 @@ stability, income).
 ...
 ```
 
-## Git je tlačidlo „späť“: commit pred, diff po
+## Git je povinný ak chcete mať záznam o tom čo agent robil
 
 :::: {.columns}
 
@@ -209,16 +210,6 @@ Vidíte presne, čo agent zmenil.
 
 \keybox{Používajte git, aj keď pracujete sami: \texttt{git diff} je váš prehľad o všetkom, čo agent zmenil.}
 
-## Dáta pod zmluvou agentovi nepatria
-
-- Všetko, čo agent prečíta, odchádza na servery poskytovateľa modelu
-- Verejné dáta (GSS): bez problému
-- Dáta so zmluvou o použití alebo s osobnými údajmi: najprv overte zmluvu a pravidlá inštitúcie
-
----
-
-\keybox{\textbf{Živá ukážka:} otvoríme repozitár v Positrone a požiadame agenta, aby prečítal priečinok a vysvetlil, čo v ňom je}
-
 # Úloha 1: replikácia
 
 ## Replikujeme grafy, ktorých výsledok poznáme
@@ -231,7 +222,7 @@ Vidíte presne, čo agent zmenil.
 ## Agent dostane len článok a dáta — oboje ako čistý text
 
 - Agent funguje najlepšie s **plochým, čitateľným textom**
-- PDF, office formáty a obrázky sú náročné na tokeny
+- PDFs a obrázky sú spravidla náročné na tokeny
 - **Riešenie: predspracovanie** — článok raz skonvertujeme do Markdownu
   - Nástroje: `markitdown`, `pymupdf4llm`, `pandoc`
 - Všeobecne: nechajte agenta **vybudovať nástroj**, nie trápiť sa s formátom
@@ -241,51 +232,49 @@ Vidíte presne, čo agent zmenil.
 - Názvy ako `abany` či `polviews` agentovi nepovedia, čo premenná meria
 - `gssrdoc::gss_doc`: jeden riadok na každú z 6 942 premenných GSS — znenie otázky, kódy odpovedí, roky zberu
 - „Nájdi všetky premenné o potratoch“ → 37 premenných, bez listovania
-- Veľmi užitočné pri **harmonizácii prieskumov** a **spájaní vĺn** (príklad: GGS)
+- Veľmi užitočné pri **harmonizácii prieskumov** a **spájaní vĺn** (príklad: moja práca na Generations and Gender Survey)
 
-\keybox{Ak vaše dáta taký codebook nemajú, agent ho vie raz vybudovať.}
+\keybox{Ak vaše dáta taký codebook nemajú, musíte ich vybudovať (s agentom).}
 
 ## Najprv plán, potom realizácia
 
 - Tokeny sú **menou** vašej práce
-- Drahé: rozsiahly kontext, vysoký „effort“, prémiové modely
-- Lacnejšie: ľahšie modely, zamerané úlohy, stručný kontext
+- Drahé: rozsiahly kontext, vysoký „effort“, prémiové modely (Fable, Astra, etc.)
+- Lacnejšie: zamerané úlohy, stručný kontext, efektívne modely (Sonnet)
 
-1. Plán rozpracujte s vrcholovým modelom v jednoduchom Markdown súbore
-2. Až hotový plán dajte agentovi realizovať — často stačí lacnejší model
+Ak máte malý rozpočet:
+  1. Predspracujte všetky vstupy do plaintext formátov
+  2. Plán rozpracujte s vrcholovým modelom v jednoduchom Markdown súbore
+  2. Na hotový plán často stačí lacnejší model potom
 
 ## Celé zadanie pre replikáciu
 
-> I want you to build out a qmd replication script for figures 1, 2, and 5 from the article in the repo using data from the package gssr. Use gssrdoc to find the important variables. I want the output to be react.js html. Include version with original span of data and then add slides with extensions with newer data
+> I want you to build out a qmd replication script for figures 1, 2, and 5 from the article in the repo using data from the package gssr. Use gssrdoc to find the important variables. Explain the measures used and how they were constructed. I want the output to be react.js html presentation. Include a version with the original span of data and then add slides with extensions with newer data. Include tabs in each slide that will show the script used to generate the output. Use tidyverse and ggplot for user readability.
+
+## Povedzte agentovi, aké balíky a štýl kódu poznáte
+
+- Zadajte balíky a postupy, ktoré už ovládate: napr. `tidyverse` a `ggplot2`
+- Skript v známom štýle prečítate a skontrolujete oveľa rýchlejšie
+- Agent sa existujúcemu štýlu prispôsobí aj bez ďalších inštrukcií
+- Ako vzor mu stačí ukázať vaše staršie projekty
 
 ## S agentom hovorte po anglicky, kedykoľvek sa dá
 
 - Kód, dokumentácia, názvy premenných aj chybové hlášky sú po anglicky
 - Zadanie v tom istom jazyku necháva menej priestoru na nedorozumenie
+- Anekdotálne - môj dojem je, že modely sú 'blbšie' keď s nimi konverzujete po slovensky
 
 ---
 
 \keybox{\textbf{Živá ukážka:} plán → skript → grafy → porovnanie s článkom}
 
-## Zhoda čísla nie je dôkaz, že analýza je správna
-
-- Agent si vie **vymyslieť** názov premennej
-- Vie **potichu zmeniť** vzorku alebo špecifikáciu
-- Vie **ladiť analýzu**, kým číslo „sedí“
-
-\keybox{Zadanie: rozdiely oproti článku nahlás, neodstraňuj ich.}
-
 # Úloha 2: explorácia
 
-## Bez známej odpovede musíte výstup vidieť
+## Dátová explorácia
 
 - Otázka: ako sa v dátach GSS vyvíjala dôvera v ľudí a v inštitúcie?
-- Nemáme publikovaný výsledok, s ktorým by sme ten náš porovnali
-- Kontrolu preto robíme očami: grafy, tabuľky, veľkosti vzoriek
-
-## Celé zadanie pre exploráciu
-
-*[Prompt pre exploráciu — doplniť po vyskúšaní úlohy]*
+- CC umožňuje veľmi rýchlo upratať dáta a následne vytvoriť grafy pre vizuálnu inšpekciu
+- Namiesto kontingenčných tabuliek môžeme všetko veľmi rýchlo a podľa vlastného vkusu vizualizovať
 
 ## Čistý text dnu, HTML von
 
@@ -305,25 +294,21 @@ Vidíte presne, čo agent zmenil.
 \end{center}
 ```
 
----
+## Z analýzy vzniknú aj prezentácie a tabuľky do manuskriptu
 
-\keybox{\textbf{Živá ukážka:} agent postaví HTML \mbox{report} o dôvere a spoločne ho prečítame}
+- **Prezentácie:** agent postaví celé slajdy priamo z výsledkov
+- **Tabuľky:** export do formátu, ktorý potrebuje váš manuskript
+- **Kontrola:** grafy, tabuľky aj slajdy vidíte hneď, ešte počas práce
 
-## Produkt je skript, nie chat
+## Git záznamy umožňujú vám aj agentovi prehľad o tom čo ste robili v minulosti
 
-- Všetko, čo agent urobil, musí skončiť v skripte
-- Skript musí zbehnúť **od začiatku do konca** v čistom R sedení
-- Čo existuje len v konverzácii, to sa nedá zopakovať
-
-## Záznam sedenia zorientuje ďalšie sedenie za pár minút
-
-Krátka textová poznámka na konci každého sedenia:
+Okrem toho odporúčam vám zanechať v markdown súbore krátku textovú poznámku na konci každého sedenia:
 
 - Čo ste robili
 - Čo ste zistili
 - Čo nasleduje a aké otázky ostali otvorené
 
-## Vlastné diagnostické grafy a vzhľad reportu patria do skillu
+## Vlastný výber diagnostických grafov a preferovaného vzhľadu reportu patria do skillu
 
 - **Skill:** textový súbor s inštrukciami, ktorý agent načíta, keď ho úloha potrebuje
 - Ktoré diagnostické grafy chcete vidieť vždy: rozdelenia, chýbajúce hodnoty, veľkosti vzoriek
@@ -332,8 +317,7 @@ Krátka textová poznámka na konci každého sedenia:
 
 ## Sila nástroja je v prispôsobení vášmu vkusu
 
-- Skill je zápis **vašich** preferencií, nie univerzálny návod
-- Čo vyhovuje mne, vám vyhovovať nemusí
+- Skills je zápis **vašich** preferencií a workflows
 
 \keybox{Môj recept nepreberajte. Postavte si vlastný.}
 
@@ -386,10 +370,57 @@ Render bez varovaní, potom kontrola každej strany PDF
 - Jeden `.qmd` súbor: Quarto → Beamer → PDF
 - Rovnaká téma ako v mojich konferenčných prezentáciách
 - Nástroj som postavil raz; odvtedy ho len používam a opravujem
+- Napr. prezentujem článok na konferencii - vojdem do priečinku kde žije manuskript, citácie a analýza dát -> vytvorím si textovú osnovu s grafmi, tabuľkami a nákresmi, ktoré chcem v prezentácii a preferovanou témou -> odovzdám svojmu deckbuilding skillu -> CC sa postará o vizuálnu stránku a typesetting grafov/tabuliek etc.
 
----
+# Analýza a overovanie výstupov
 
-\keybox{\textbf{Živá ukážka:} z reportu o dôvere spravíme trojslajdovú prezentáciu}
+## Agent píše kód rýchlejšie, než ho stíhate kontrolovať
+
+- Agent napíše 200 riadkov analýzy naraz
+- Výstup vyzerá hotovo a presvedčivo, aj keď je chybný
+- Pri väčšej analýze sa chyby vrstvia: jedna zlá premenná pokazí všetko ďalšie
+- Overovanie preto patrí do každého kroku, nie až na koniec
+
+## Plán analýzy napíšte skôr, než agent začne
+
+- Plán alebo checklist v Markdowne: vzorka, premenné, modely, očakávané výstupy
+- Agent sa po každom kroku porovná s plánom: čo je hotové, čo sa odchýlilo a prečo
+- Krok sa uzavrie až po kontrole, potom nasleduje ďalší
+- Cieľ: **nula chýb** (narozdiel od programátorstva kde sa presadilo najprv)
+
+## Druhý agent replikuje výsledky nezávisle
+
+```{=latex}
+\begin{center}
+\begin{tikzpicture}
+  \node[root, anchor=center] (p) at (-5.2,0) {plán + dáta};
+  \node[stepbox, text width=2.6cm, font=\normalsize] (a) at (-0.6,1.1) {agent A\\[2pt]{\small\mdseries skript A}};
+  \node[stepbox, text width=2.6cm, font=\normalsize] (b) at (-0.6,-1.1) {agent B\\[2pt]{\small\mdseries skript B}};
+  \node[stepbox, text width=2.6cm, font=\normalsize] (c) at (4.4,0) {porovnanie výsledkov};
+  \draw[flow] (p.east) -- ++(0.7,0) |- (a.west);
+  \draw[flow] (p.east) -- ++(0.7,0) |- (b.west);
+  \draw[flow] (a.east) -- ++(0.7,0) |- (c.west);
+  \draw[flow] (b.east) -- ++(0.7,0) |- (c.west);
+\end{tikzpicture}
+\end{center}
+```
+
+- Agent B začína v čistom sedení: dostane plán a dáta, nie kód agenta A
+- Nezhoda znamená, že aspoň jeden skript obsahuje chybu
+
+## Kód si prečítajte aj sami
+
+- `git diff` po každom kroku
+- Tiché chyby vznikajú najmä tu: filtre, spájanie tabuliek, rekódovanie, chýbajúce hodnoty, váhy
+- Každé číslo v texte musí viesť ku skriptu a k nezmeneným surovým dátam
+- Za analýzu zodpovedáte vy, nie agent
+
+## Inšpirácia: Mixtape Harness Scotta Cunninghama
+
+- Analýza je rozdelená na etapy podľa checklistu; aktívna je vždy len jedna
+- Etapa sa po kontrole „zamkne“, až potom sa ide ďalej
+- Surové dáta sú nemenné; každý graf a tabuľka vzniká z pomenovaného skriptu
+- Pravidlá nie sú len text: automatické kontroly (hooks) ich vynucujú
 
 # Kde začať
 
@@ -398,7 +429,7 @@ Render bez varovaní, potom kontrola každej strany PDF
 1. Otvorte projekt, ktorý **už máte**
 2. Požiadajte agenta, aby prečítal hlavný skript a vysvetlil, čo robí
 3. **Zatiaľ ho nežiadajte o žiadne zmeny**
-4. Pozrite sa, ako dobre rozumie vašej práci
+4. Pozrite sa, do akej miery rozumie vašej práci
 
 ## Kde pokračovať
 
@@ -408,9 +439,7 @@ Render bez varovaní, potom kontrola každej strany PDF
   - causalinf.substack.com
 - **Mixtape Harness** (Cunningham): šablóna pravidiel a kontrol pre kauzálnu inferenciu s agentmi
   - github.com/scunning1975/mixtape_harness
-
-# Agent pracuje vo vašom priečinku. Musíte preňho vytvoriť správne prostredie a kontrolovať, čo z neho vyjde.
-
+  
 ## Kde ma nájdete
 
 :::: {.columns}
