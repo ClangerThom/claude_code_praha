@@ -56,10 +56,6 @@ Väčšinou cez chatové okno.
   - AI nevie, čo znamenajú názvy vašich premenných
   - Nevie, čo ste skúšali minulý týždeň
 
----
-
-\keybox{\textbf{Ukážka:} skutočná konverzácia s chatbotom o chybe v kóde}
-
 ## Agent pracuje priamo vo vašom priečinku
 
 ```{=latex}
@@ -360,10 +356,6 @@ Render bez varovaní, potom kontrola každej strany PDF
 :::
 
 :::::
-
----
-
-*[Screenshot: priečinok nástroja na prezentácie alebo jeho SKILL.md]*
 
 ## Túto prezentáciu postavil ten istý nástroj
 
